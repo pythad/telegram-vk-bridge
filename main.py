@@ -71,7 +71,7 @@ class TelegramVkBot:
                                       ', please, provide a message to forward')
             return
         message = self._repr_update_trigger(bot, update) + 'says "{}"'.format(
-            message_to_send
+            message_to_send.strip()
         )
         try:
             self._forward_to_vk(message)

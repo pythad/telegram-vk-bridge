@@ -55,11 +55,8 @@ class TelegramVkBot:
         pattern = re.compile(COMMAND_PATTERN)
         match = pattern.fullmatch(update.message.text)
         # Check if user hasn't passed any args
-        try:
-            match.group('args')
-        except IndexError:
-            pass
-        else:
+        args = match.group('args')
+        if args:
             telegram_reply = telegram_reply_user_str + \
                 ', \'{}\' doesn\'t take any args. Please, use \'send_to_vk\' if you want to send a custom message'.format(func_name)
             bot.send_message(chat_id=update.message.chat_id,
@@ -93,9 +90,8 @@ class TelegramVkBot:
             telegram_reply_user_str = user_str
         pattern = re.compile(COMMAND_PATTERN)
         match = pattern.fullmatch(update.message.text)
-        try:
-            message_to_send = match.group('args')
-        except IndexError:
+        message_to_send = match.group('args')
+        if not message_to_send:
             telegram_reply = telegram_reply_user_str + \
                 ', please, provide a message to forward'
             bot.send_message(chat_id=update.message.chat_id,

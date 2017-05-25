@@ -2,6 +2,9 @@ import inspect
 import os
 
 
+COMMAND_PATTERN = r'\/(?P<command_name>[^@\s]+)@?(?:(?P<bot_name>\S+)|)\s?(?P<args>[\s\S]*)$'
+
+
 def get_func_name():
     return inspect.currentframe().f_back.f_code.co_name
 

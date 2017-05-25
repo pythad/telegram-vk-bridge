@@ -1,4 +1,5 @@
 import logging
+import re
 
 from requests.exceptions import HTTPError
 
@@ -9,6 +10,7 @@ from telegram.ext import Updater
 
 from utils import get_func_name
 from utils import get_env_variable
+from utils import COMMAND_PATTERN
 
 logging.basicConfig(filename='bot.log',
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -43,18 +45,32 @@ class TelegramVkBot:
         '''
         Alarms VK chat to visit Telegram in order to see something important
         '''
-        first_name, last_name, username = self._get_update_trigger(bot, update)
+        func_name = get_func_name()
+        username = self._get_update_trigger(bot, update)[2]
         user_str = self._repr_update_trigger(bot, update)
+        if username:
+            telegram_reply_user_str = '@{}'.format(username)
+        else:
+            telegram_reply_user_str = user_str
+        pattern = re.compile(COMMAND_PATTERN)
+        match = pattern.fullmatch(update.message.text)
+        # Check if user hasn't passed any args
+        try:
+            match.group('args')
+        except IndexError:
+            pass
+        else:
+            telegram_reply = telegram_reply_user_str + \
+                ', \'{}\' doesn\'t take any args. Please, use \'send_to_vk\' if you want to send a custom message'.format(func_name)
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
+            return
         message = user_str + \
             ' wants VK PI community to visit Telegram in order to see something important'
         try:
             self._forward_to_vk(message)
         except Exception:  # log it
             logger.exception('Exception while forwarding message to vk')
-            if username:
-                telegram_reply_user_str = '@{}'.format(username)
-            else:
-                telegram_reply_user_str = user_str
             telegram_reply = telegram_reply_user_str + \
                 ', sorry, something went wrong while sending message to VK'
             bot.send_message(chat_id=update.message.chat_id,
@@ -70,22 +86,24 @@ class TelegramVkBot:
         Forwards a custom message to VK chat
         '''
         username = self._get_update_trigger(bot, update)[2]
-        command_name = get_func_name()
-        command_replace_str = '/' + command_name
-        message_to_send = update.message.text.replace(
-            command_replace_str, '')
-        if not message_to_send:
-            update.message.reply_text('@' + username +
-                                      ', please, provide a message to forward')
-            return
         user_str = self._repr_update_trigger(bot, update)
-        message = user_str + ' says "{}"'.format(
-            message_to_send.strip()
-        )
         if username:
             telegram_reply_user_str = '@{}'.format(username)
         else:
             telegram_reply_user_str = user_str
+        pattern = re.compile(COMMAND_PATTERN)
+        match = pattern.fullmatch(update.message.text)
+        try:
+            message_to_send = match.group('args')
+        except IndexError:
+            telegram_reply = telegram_reply_user_str + \
+                ', please, provide a message to forward'
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
+            return
+        message = user_str + ' says "{}"'.format(
+            message_to_send
+        )
         try:
             self._forward_to_vk(message)
         except Exception:

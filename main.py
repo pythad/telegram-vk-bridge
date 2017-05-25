@@ -86,7 +86,7 @@ class TelegramVkBot:
     def _forward_to_vk(self, message):
         vk = self._get_vk_api()
         recipient = self.VK_RECIPIENT
-        vk.messages.send(user_id=recipient, message=message)
+        vk.messages.send(peer_id=recipient, message=message)
 
     def _set_telegram_handlers(self):
         alarm_vk_handler = CommandHandler('alarm_vk', self.alarm_vk)

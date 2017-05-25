@@ -44,18 +44,26 @@ class TelegramVkBot:
         Alarms VK chat to visit Telegram in order to see something important
         '''
         first_name, last_name, username = self._get_update_trigger(bot, update)
-        message = '{} {}(@{}) wants VK PI community to visit Telegram in order to see something important'.format(
-            first_name, last_name, username
-        )
+        user_str = self._repr_update_trigger(bot, update)
+        message = user_str + \
+            ' wants VK PI community to visit Telegram in order to see something important'
         try:
             self._forward_to_vk(message)
         except Exception:  # log it
             logger.exception('Exception while forwarding message to vk')
-            update.message.reply_text('@' + username +
-                                      ', sorry, something went wrong while sending message to VK')
+            if username:
+                telegram_reply_user_str = '@{}'.format(username)
+            else:
+                telegram_reply_user_str = user_str
+            telegram_reply = telegram_reply_user_str + \
+                ', sorry, something went wrong while sending message to VK'
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
         else:
-            update.message.reply_text('@' + username +
-                                      ', message to VK has been successfully sent')
+            telegram_reply = telegram_reply_user_str + \
+                ', message to VK has been successfully sent'
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
 
     def send_to_vk(self, bot, update):
         '''
@@ -70,18 +78,27 @@ class TelegramVkBot:
             update.message.reply_text('@' + username +
                                       ', please, provide a message to forward')
             return
-        message = self._repr_update_trigger(bot, update) + 'says "{}"'.format(
+        user_str = self._repr_update_trigger(bot, update)
+        message = user_str + ' says "{}"'.format(
             message_to_send.strip()
         )
+        if username:
+            telegram_reply_user_str = '@{}'.format(username)
+        else:
+            telegram_reply_user_str = user_str
         try:
             self._forward_to_vk(message)
         except Exception:
             logger.exception('Exception while forwarding message to vk')
-            update.message.reply_text('@' + username +
-                                      ', sorry, something went wrong while forwarding your message')
+            telegram_reply = telegram_reply_user_str + \
+                ', sorry, something went wrong while forwarding your message'
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
         else:
-            update.message.reply_text('@' + username +
-                                      ', your message has been forwarded to VK')
+            telegram_reply = telegram_reply_user_str + \
+                ', your message has been forwarded to VK'
+            bot.send_message(chat_id=update.message.chat_id,
+                             text=telegram_reply)
 
     def _forward_to_vk(self, message):
         vk = self._get_vk_api()
@@ -108,9 +125,17 @@ class TelegramVkBot:
 
     def _repr_update_trigger(self, bot, update):
         first_name, last_name, username = self._get_update_trigger(bot, update)
-        message = '{} {}(@{}) '.format(
-            first_name, last_name, username
-        )
+        message_li = []
+        if first_name:
+            message_li.append(first_name)
+        if last_name:
+            message_li.append(last_name)
+        message = ' '.join(message_li)
+        if username:
+            if message:
+                message += '(@{})'.format(username)
+            else:
+                message = '@{}'.format(username)
         return message
 
 

@@ -1,0 +1,10 @@
+appdirs==1.4.3
+certifi==2017.4.17
+enum34==1.1.6
+future==0.16.0
+packaging==16.8
+pkg-resources==0.0.0
+python-telegram-bot==6.0.1
+requests==2.14.2
+six==1.10.0
+vk-api==8.8
